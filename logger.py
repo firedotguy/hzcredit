@@ -1,0 +1,30 @@
+from logging import basicConfig, getLogger, CRITICAL
+from sysconfig import get_paths
+from site import getsitepackages, getusersitepackages
+
+from rich.logging import RichHandler
+from rich.traceback import install
+
+stdlib = get_paths()["stdlib"]
+site_pkgs = []
+try:
+    site_pkgs += getsitepackages()
+except Exception:
+    pass
+usp = getusersitepackages()
+if usp:
+    site_pkgs.append(usp)
+
+install(width=200, code_width=120, theme='monokai', show_locals=True, suppress=[stdlib, *site_pkgs])
+basicConfig(
+    level='DEBUG', format='%(message)s', handlers=[RichHandler(
+        rich_tracebacks=True, tracebacks_width=200, tracebacks_code_width=120, tracebacks_show_locals=True, tracebacks_theme='monokai', tracebacks_suppress=[stdlib, *site_pkgs]
+    )]
+)
+getLogger('aiogram.dispatcher').setLevel(CRITICAL)
+getLogger('aiogram.event').setLevel(CRITICAL)
+getLogger('asyncio').setLevel(CRITICAL)
+
+
+def get_logger():
+    return getLogger()
