@@ -42,9 +42,13 @@ async def cmd_start(message: types.Message):
         l.info('found user id=%s', user.id)
 
     await message.answer(
-f'''<b>Добро пожаловать в хз бота</b>\n
+f'''<b>Добро пожаловать в хз бота</b>
+
 <b>Баланс:</b> {user.balance}сцк
 <b>ID:</b> {user.id}
+
+<i>Исходный код бота:</i> <a href="https://github.com/firedotguy/hzcredit">GitHub</a>
+<i>Версия <b>0.1.0</b></i>
 ''')
 
 
