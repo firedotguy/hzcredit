@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from db import Base
@@ -12,6 +13,17 @@ class User(Base):
     name = Column(String, nullable=False)
     balance = Column(Float, nullable=False, default=0.0)
 
+    sent_transactions = relationship(
+        "Transaction",
+        foreign_keys="Transaction.sender_id",
+        back_populates="sender",
+    )
+
+    received_transactions = relationship(
+        "Transaction",
+        foreign_keys="Transaction.receiver_id",
+        back_populates="receiver",
+    )
     # @property
     # def transactions(self):
     #     return sorted((self.sent_transactions or []) + (self.received_transactions or []), key=lambda t: t.created_at)

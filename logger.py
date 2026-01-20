@@ -1,4 +1,4 @@
-from logging import basicConfig, getLogger, CRITICAL
+from logging import basicConfig, getLogger, WARNING
 from sysconfig import get_paths
 from site import getsitepackages, getusersitepackages
 
@@ -21,9 +21,9 @@ basicConfig(
         rich_tracebacks=True, tracebacks_width=200, tracebacks_code_width=120, tracebacks_show_locals=True, tracebacks_theme='monokai'#, tracebacks_suppress=[stdlib, *site_pkgs]
     )]
 )
-getLogger('aiogram.dispatcher').setLevel(CRITICAL)
-getLogger('aiogram.event').setLevel(CRITICAL)
-getLogger('asyncio').setLevel(CRITICAL)
+getLogger('aiogram.dispatcher').setLevel(WARNING)
+getLogger('aiogram.event').setLevel(WARNING)
+getLogger('asyncio').setLevel(WARNING)
 
 
 def get_logger():

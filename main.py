@@ -2,10 +2,11 @@ from asyncio import run, CancelledError
 from os import getenv
 
 from dotenv import load_dotenv
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, F
 from aiogram.client.default import DefaultBotProperties
 from aiogram.filters.command import Command
 from aiogram.enums import ParseMode
+from aiogram.types import LinkPreviewOptions, Message, KeyboardButton, ReplyKeyboardMarkup
 
 from logger import get_logger
 from db import get_db, create_db
@@ -29,7 +30,7 @@ l.info('db init')
 
 
 @dp.message(Command('start'))
-async def cmd_start(message: types.Message):
+async def start(message: Message):
     user_data = message.from_user
     assert user_data is not None
 
@@ -41,6 +42,20 @@ async def cmd_start(message: types.Message):
     else:
         l.info('found user id=%s', user.id)
 
+    kb = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text='История'),
+                KeyboardButton(text='Перевод')
+            ],
+            [
+                KeyboardButton(text='Звания'),
+                KeyboardButton(text='Трейды')
+            ]
+        ],
+        resize_keyboard=True
+    )
+
     await message.answer(
 f'''<b>Добро пожаловать в хз бота</b>
 
@@ -49,7 +64,28 @@ f'''<b>Добро пожаловать в хз бота</b>
 
 <i>Исходный код бота:</i> <a href="https://github.com/firedotguy/hzcredit">GitHub</a>
 <i>Версия <b>0.1.0</b></i>
-''')
+''', link_preview_options=LinkPreviewOptions(is_disabled=True), reply_markup=kb)
+
+
+@dp.message(F.text.lower() == 'история')
+async def history(message: Message):
+    await message.answer('Панель в разработке')
+
+
+@dp.message(F.text.lower() == 'перевод')
+async def new_transaction(message: Message):
+    await message.answer('Панель в разработке')
+
+
+@dp.message(F.text.lower() == 'звания')
+async def rank(message: Message):
+    await message.answer('Панель в разработке')
+
+
+@dp.message(F.text.lower() == 'трейды')
+async def trades(message: Message):
+    await message.answer('Панель в разработке')
+
 
 
 async def main():
