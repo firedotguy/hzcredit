@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from models.user import User
+from models import *
 from logger import get_logger
 
 l = get_logger()
@@ -8,7 +8,10 @@ l = get_logger()
 
 def get_user(db: Session, user_id: int) -> User | None:
     l.info('get user user_id=%s', user_id)
-    return db.query(User).filter(User.user_id == user_id).first()
+    l.debug(type(db))
+    res = db.query(User).filter(User.user_id == user_id).first()
+    l.debug('1')
+    return res
 
 def create_user(db: Session, name: str, user_id: int) -> User:
     l.info('create user user_id=%s name=%s', user_id, name)
