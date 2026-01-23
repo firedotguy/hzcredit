@@ -44,6 +44,7 @@ async def callback_rank(callback: CallbackQuery, db: Session):
         f'''
 <b>Информация о звании</b>
 
+<b>ID:</b> {rank.id}
 <b>Название:</b> {rank.name}
 <b>Владелец:</b> {rank.owner.name}
 <b>Дата создания:</b> {rank.created_at}

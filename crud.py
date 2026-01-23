@@ -32,3 +32,10 @@ def get_rank(db: Session, id: int) -> Rank:
     if rank:
         l.info('found rank name=%s', rank.name)
     return rank
+
+
+def get_user_top(db: Session) -> list[User]:
+    l.info('get user top')
+    users = db.query(User).order_by(User.balance.desc()).limit(10).all()
+    l.info('fetched users top ids=%s', [user.id for user in users])
+    return users

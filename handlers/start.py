@@ -1,9 +1,9 @@
 from aiogram import Router
 from aiogram.filters.command import Command
 from aiogram.types import LinkPreviewOptions, Message
+from sqlalchemy.orm.session import Session
 
 from logger import get_logger
-from db import Session
 from keyboards import main_kb
 import crud
 
