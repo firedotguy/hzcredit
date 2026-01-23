@@ -26,6 +26,7 @@ create_db()
 
 dp.include_routers(base_router)
 dp.message.middleware(DBMiddleware())
+dp.callback_query.middleware(DBMiddleware())
 
 
 async def main():

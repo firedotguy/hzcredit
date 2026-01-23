@@ -7,6 +7,7 @@ from db import Base
 
 class Transaction(Base):
     __tablename__ = 'transactions'
+
     id = Column(Integer, primary_key=True, index=True, nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     sender_id = Column(Integer, ForeignKey('users.id'), nullable=False)

@@ -5,4 +5,4 @@ router = Router()
 
 @router.message(F.text.lower() == 'история')
 async def history(message: Message):
-    await message.answer('Панель в разработке')
+    await message.answer('У вас еще не было транзакций')

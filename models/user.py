@@ -7,11 +7,14 @@ from db import Base
 
 class User(Base):
     __tablename__ = 'users'
+
     id = Column(Integer, primary_key=True, index=True, nullable=False)
     user_id = Column(Integer, nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     name = Column(String, nullable=False)
     balance = Column(Float, nullable=False, default=0.0)
+
+    ranks = relationship('Rank', foreign_keys="Rank.owner_id", back_populates='owner')
 
     sent_transactions = relationship(
         "Transaction",
