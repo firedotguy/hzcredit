@@ -18,7 +18,7 @@ async def start(message: Message, db: Session):
     l.info('cmd /start')
     user = crud.get_user(db, user_data.id)
     if not user:
-        l.warning('user not found')
+        # l.warning('user not found')
         user = crud.create_user(db, user_data.first_name, user_data.id)
 
     ranks = [rank.name for rank in user.ranks]
@@ -27,9 +27,10 @@ async def start(message: Message, db: Session):
         f'''
 <b>Добро пожаловать в хз бота</b>
 
+<b>ID:</b> {user.id}
 <b>Баланс:</b> {user.balance}сцк
 <b>Звания:</b> {", ".join(ranks)}
-<b>ID:</b> {user.id}
+<b>Дата создания аккаунта:</b> {user.created_at}
 
 <i>Исходный код бота:</i> <a href="https://github.com/firedotguy/hzcredit">GitHub</a>
 <i>Версия <b>0.1.0</b></i>

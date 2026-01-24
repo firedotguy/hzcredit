@@ -15,3 +15,5 @@ class Rank(Base):
     owner_id = Column(Integer(), ForeignKey('users.id'))
 
     owner = relationship("User", foreign_keys=[owner_id], back_populates='ranks')
+    trading_trades = relationship('Trade', foreign_keys='Trade.trading_rank_id', back_populates='trading_rank')
+    purchasing_trades = relationship('Trade', foreign_keys='Trade.purchasing_rank_id', back_populates='purchasing_rank')

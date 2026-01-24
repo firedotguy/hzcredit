@@ -32,9 +32,10 @@ async def rank(message: Message, db: Session):
 async def callback_rank(callback: CallbackQuery, db: Session):
     assert callback.message
     assert callback.data
+    l.info('callback rank %s', callback.data.split('_')[1])
 
-    c_data = callback.data.split('_')
-    rank = crud.get_rank(db, int(c_data[1]))
+    rank = crud.get_rank(db, int(callback.data.split('_')[1]))
+
     if rank is None:
         await callback.message.answer('Звание не найдено')
         await callback.answer()
@@ -50,5 +51,5 @@ async def callback_rank(callback: CallbackQuery, db: Session):
 <b>Дата создания:</b> {rank.created_at}
 <b>Дата получения:</b> {rank.owned_at or "-"}
         ''')
-    await message.edit_reply_markup(reply_markup=get_back_kb(message.message_id))
+    await message.edit_reply_markup(reply_markup=get_back_kb(True))
     await callback.answer()
