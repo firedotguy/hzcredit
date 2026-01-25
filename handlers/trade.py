@@ -45,8 +45,7 @@ async def trade_my(callback: CallbackQuery, db: Session):
         await callback.answer()
         return
 
-    message = await callback.message.answer('<b>Ваши трейды:</b>')
-    await message.edit_reply_markup(reply_markup=build_trades_kb(trades, message.message_id))
+    await callback.message.answer('<b>Ваши трейды:</b>', reply_markup=build_trades_kb(trades, True))
     await callback.answer()
 
 
