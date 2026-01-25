@@ -70,6 +70,8 @@ def build_trades_kb(trades: list[Trade], message_id: int | None = None):
         completed = ''
         if cast(bool, trade.completed):
             completed = '[ЗАВЕРШЕН] '
+        elif cast(bool, trade.deleted):
+            completed = '[УДАЛЕН] '
 
         builder.row(InlineKeyboardButton(text=f'{completed}{trading} -> {purchasing}', callback_data=f'trade_{trade.id}'))
     # if not trades:

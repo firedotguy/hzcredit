@@ -8,7 +8,7 @@ from sqlalchemy.orm.session import Session
 
 from logger import get_logger
 from models import Trade
-from keyboards import build_trades_kb, get_back_kb, new_trade_kb, get_trade_complete_kb
+from keyboards import build_trades_kb, get_back_kb, new_trade_kb, get_trade_complete_kb, get_trade_kb
 import crud
 
 l = get_logger()
@@ -38,7 +38,7 @@ async def trade_my(callback: CallbackQuery, db: Session):
         await callback.answer()
         return
 
-    trades = crud.get_trades(db, False, cast(int, user.id))
+    trades = crud.get_trades(db, False, trader_id=cast(int, user.id)) + crud.get_trades(db, False, purchaser_id=cast(int, user.id))
     if not trades:
         message = await callback.message.answer('<i>Нет трейдов</i>')
         await message.edit_reply_markup(reply_markup=get_back_kb(True))
@@ -50,7 +50,7 @@ async def trade_my(callback: CallbackQuery, db: Session):
     await callback.answer()
 
 
-@router.callback_query(F.data.regexp(r'trade_\d+'))
+@router.callback_query(F.data.regexp(r'^trade_\d+$'))
 async def trade(callback: CallbackQuery, db: Session):
     assert callback.message
     assert callback.data
@@ -82,8 +82,9 @@ async def trade(callback: CallbackQuery, db: Session):
 
 <b>Завершен:</b> {"Да" if cast(bool, trade.completed) else "Нет"}
 <b>Дата завершения:</b> {trade.completed_at or "-"}
+<b>Удален:</b> {"Да" if cast(bool, trade.deleted) else "Нет"}
         ''')
-    await message.edit_reply_markup(reply_markup=get_back_kb(True))
+    await message.edit_reply_markup(reply_markup=get_trade_kb(cast(int, trade.id), trade.trader.user_id == callback.from_user.id))
     await callback.answer()
 
 
@@ -111,7 +112,7 @@ async def trade_new(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-@router.callback_query(F.data.regexp(r'trade_new_(?:trader|purchaser)_(?:amount|rank)'))
+@router.callback_query(F.data.regexp(r'^trade_new_(?:trader|purchaser)_(?:amount|rank)$'))
 async def trade_new_update1(callback: CallbackQuery, db: Session, state: FSMContext):
     assert callback.message
     assert callback.data
@@ -232,4 +233,113 @@ async def trade_new_complete(callback: CallbackQuery, state: FSMContext, db: Ses
 
 <b>ID:</b> {trade.id}
         ''', reply_markup=get_trade_complete_kb(cast(int, trade.id)))
+    await callback.answer()
+
+
+@router.callback_query(F.data.regexp(r'^trade_\d+_delete$'))
+async def trade_delete(callback: CallbackQuery, db: Session):
+    assert callback.data
+    assert callback.message
+    id = int(callback.data.split('_')[1])
+    l.info('callback trade delete id=%s', id)
+
+    trade = crud.get_trade(db, id)
+    if trade is None:
+        await callback.message.answer('Трейд не найден')
+        await callback.answer()
+        return
+
+    if cast(bool, trade.completed):
+        await callback.message.answer('Трейд уже завершен')
+        await callback.answer()
+        return
+
+    if trade.purchaser:
+        await callback.message.answer('У трейда уже есть покупатель')
+        await callback.answer()
+        return
+
+    if cast(bool, trade.deleted):
+        await callback.message.answer('Трейд уже удален')
+        await callback.answer()
+        return
+
+    crud.delete_trade(db, id)
+    await callback.message.answer('Трейд удален')
+    await cast(Message, callback.message).delete()
+    await callback.answer()
+
+
+@router.callback_query(F.data.regexp(r'^trade_\d+_accept$'))
+async def trade_accept(callback: CallbackQuery, db: Session):
+    assert callback.data
+    assert callback.message
+    id = int(callback.data.split('_')[1])
+    l.info('callback trade accept id=%s', id)
+
+    trade = crud.get_trade(db, id)
+    if trade is None:
+        await callback.message.answer('Трейд не найден')
+        await callback.answer()
+        return
+
+    if trade.purchaser is not None:
+        await callback.message.answer('У трейда уже есть покупатель')
+        await callback.answer()
+        return
+
+    if cast(bool, trade.deleted):
+        await callback.message.answer('Трейд уже удален')
+        await callback.answer()
+        return
+
+    user = crud.get_user(db, callback.from_user.id)
+    if user is None:
+        await callback.message.answer('Пользователь не найден')
+        await callback.answer()
+        return
+    trade.purchaser = user
+
+
+    if trade.trading_amount is not None and trade.trader.balance < trade.trading_amount:
+        await callback.message.answer('У трейдера недостаточно СЦК')
+        await callback.answer()
+        return
+
+    if trade.purchasing_amount is not None and trade.purchaser.balance < trade.purchasing_amount:
+        await callback.message.answer('У вас недостаточно СЦК')
+        await callback.answer()
+        return
+
+    if trade.trading_rank is not None and trade.trading_rank not in trade.trader.ranks:
+        await callback.message.answer('У трейдера нет необходимого звания')
+        await callback.answer()
+        return
+
+    if trade.purchasing_rank is not None and trade.purchasing_rank not in trade.purchaser.ranks:
+        await callback.message.answer('У вас нет необходимого звания')
+        await callback.answer()
+        return
+
+    crud.accept_trade(db, id, cast(int, user.id))
+
+    if trade.trading_rank is not None:
+        crud.transfer_rank(db, trade.trading_rank, cast(int, trade.purchaser_id))
+    if trade.purchasing_rank is not None:
+        crud.transfer_rank(db, trade.purchasing_rank, cast(int, trade.trader_id))
+    if trade.trading_amount is not None:
+        crud.make_transaction(db, cast(float, trade.trading_amount), trade.trader, trade.purchaser)
+    if trade.purchasing_amount is not None:
+        crud.make_transaction(db, cast(float, trade.purchasing_amount), trade.purchaser, trade.trader)
+
+    await callback.message.answer(
+        f'''
+<b>Трейд принят!</b>
+
+<b>Снято СЦК:</b> {trade.purchasing_amount or 0.0}
+<b>Получено СЦК:</b> {trade.trading_amount or 0.0}
+
+<b>Отдано звание:</b> {trade.purchasing_rank.name if trade.purchasing_rank else "-"}
+<b>Получено звание:</b> {trade.trading_rank.name if trade.trading_rank else "-"}
+        ''', reply_markup=get_back_kb(True))
     await callback.answer()

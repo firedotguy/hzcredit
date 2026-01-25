@@ -18,7 +18,7 @@ if TOKEN is None:
     l.critical('no token')
     quit()
 
-bot = Bot(TOKEN, default=DefaultBotProperties(ParseMode.HTML))
+bot = Bot(TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 l.info('bot init')
 

@@ -18,6 +18,7 @@ class Trade(Base):
     purchasing_rank_id = Column(Integer(), ForeignKey('ranks.id'))
     purchasing_amount = Column(Float())
     completed = Column(Boolean(), nullable=False, default=False)
+    deleted = Column(Boolean(), nullable=False, default=False)
 
     trader = relationship('User', foreign_keys=[trader_id], back_populates='trading_trades')
     purchaser = relationship('User', foreign_keys=[purchaser_id], back_populates='purchasing_trades')

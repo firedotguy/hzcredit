@@ -28,7 +28,7 @@ async def rank(message: Message, db: Session):
     await message.answer('<b>Ваши звания:</b>', reply_markup=build_ranks_kb(user.ranks))
 
 
-@router.callback_query(F.data.regexp(r'rank_\d+'))
+@router.callback_query(F.data.regexp(r'^rank_\d+$'))
 async def callback_rank(callback: CallbackQuery, db: Session):
     assert callback.message
     assert callback.data
